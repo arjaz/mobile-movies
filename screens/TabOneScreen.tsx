@@ -1,51 +1,83 @@
 import * as React from "react";
-import { StyleSheet, FlatList } from "react-native";
+import { StyleSheet, FlatList, TouchableOpacity, Button } from "react-native";
+import { SearchBar } from "react-native-elements";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
 
 import EditScreenInfo from "../components/EditScreenInfo";
-import Movie from "../components/Movie";
+import { Movie, movies } from "../components/Movie";
 import { Text, View } from "../components/Themed";
-import { Posters } from "../assets/images/Posters/Posters";
 
-const loadMovies = () => {
-  return require("../assets/movies/MoviesList.json")
-    .Search.filter((movie) => movie.Type === "movie")
-    .map((movie) => ({
-      id: movie.imdbID,
-      title: movie.Title === "" ? null : movie.Title,
-      year: movie.Year === "" ? null : Number(movie.Year),
-      poster: movie.Poster === "" ? null : Posters[movie.Poster],
-    }));
-};
+const TabOneScreen = ({ route, navigation }) => {
+  const [searchText, setSearchText] = React.useState("");
 
-export default function TabOneScreen() {
-  const movies = loadMovies();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Movies</Text>
+      <SearchBar
+        onChangeText={(text) => setSearchText(text)}
+        value={searchText}
+      />
       <View
         style={styles.separator}
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
       <FlatList
-        data={movies}
-        renderItem={(movie) => (
-          <Movie
-            title={movie.item.title}
-            year={movie.item.year}
-            poster={movie.item.poster}
-          />
+        data={movies.filter((movie) =>
+          movie.title.toLowerCase().includes(searchText.toLowerCase())
         )}
-        keyExtractor={(movie) => movie.id}
-      />
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
+        renderItem={(movie) => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("Root", {
+                screen: "TabTwo",
+                params: {
+                  screen: "TabTwoScreen",
+                  params: {
+                    movie: movie.item.id,
+                  },
+                },
+              })
+            }
+          >
+            <Movie
+              title={movie.item.title}
+              year={movie.item.year}
+              poster={movie.item.poster}
+            />
+            <Button
+              onPress={() => {
+                // Delete the movie
+                movies.splice(
+                  movies.indexOf(movies.find((m) => m.id === movie.item.id)),
+                  1
+                );
+                // Rerender the page with that hack
+                navigation.navigate("Root", {
+                  screen: "TabOne",
+                  params: {
+                    screen: "TabOneScreen",
+                    params: {
+                      removedMovie: movie.item.id,
+                    },
+                  },
+                });
+              }}
+              title="Delete"
+            />
+          </TouchableOpacity>
+        )}
+    keyExtractor={(movie) => movie.id}
+    />
+    <View
+      style={styles.separator}
+      lightColor="#eee"
+      darkColor="rgba(255,255,255,0.1)"
+    />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -63,3 +95,5 @@ const styles = StyleSheet.create({
     width: "80%",
   },
 });
+
+export default TabOneScreen;
