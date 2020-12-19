@@ -26,6 +26,11 @@ export default {
               TabFourScreen: "four",
             },
           },
+          TabFive: {
+            screens: {
+              TabFiveScreen: "five",
+            },
+          },
         },
       },
       NotFound: "*",
